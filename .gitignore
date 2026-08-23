@@ -1,0 +1,8 @@
+.jumbo/
+.jumbo/jumbo.db
+
+# Build and release artifacts (shared via GitHub Releases)
+/dist/
+/usbjiggler
+/usbjiggler-portmaster.zip
+/usbjiggler-portmaster.zip.sha256

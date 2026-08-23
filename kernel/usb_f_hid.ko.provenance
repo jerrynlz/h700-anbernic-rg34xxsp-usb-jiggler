@@ -1,0 +1,17 @@
+source_repo=https://github.com/orangepi-xunlong/linux-orangepi.git
+source_ref=orange-pi-4.9-sun50iw9
+source_commit=0cd0547ea405b84b5b60fbc92978ac1bc2b68055
+source_patch=patches/f_hid-in-only.patch
+source_patch_sha256=40b1596f519b9bead8fa0bd0fd772cbdbc5e97365ea3365f5364949497895715
+source_exactness=vendor source lineage with exact running config and exact running export CRCs; exact muOS source commit unconfirmed
+target_config_sha256=565948300ae2d0f68a8ec85a18be033cde06ad4c46a988bebf708b9ce35cb119
+target_symvers_source=read-only extraction from running kernel export tables
+target_symvers_sha256=cc1f3b38d3d6f5ecc188a3fa87e5b7bcf6a04c0de9743407ddecee8b860bd30a
+target_symvers_coverage=55/55 module imports
+hid_endpoint_mode=interrupt-IN-only
+hid_endpoint_rationale=H700 sunxi UDC exposes one bidirectional interrupt endpoint and cannot satisfy stock f_hid IN+OUT allocation
+compiler=Linaro GCC 5.3-2016.02 5.3.1 20160113
+expected_release=4.9.170
+module_vermagic=4.9.170 SMP preempt mod_unload modversions aarch64
+module_sha256=5a3cfc769fd592c8f8ad7aa4238df6d1c1c70e72de5ad923eb334280a35e07a9
+compatibility_gate=normal insmod plus unbound create/remove/unload and bound create/unbind/remove/unload lifecycles

@@ -1,0 +1,126 @@
+diff --git a/drivers/usb/gadget/function/f_hid.c b/drivers/usb/gadget/function/f_hid.c
+index 8e83649f7..5acf252db 100644
+--- a/drivers/usb/gadget/function/f_hid.c
++++ b/drivers/usb/gadget/function/f_hid.c
+@@ -81,7 +81,7 @@ static struct usb_interface_descriptor hidg_interface_desc = {
+ 	.bDescriptorType	= USB_DT_INTERFACE,
+ 	/* .bInterfaceNumber	= DYNAMIC */
+ 	.bAlternateSetting	= 0,
+-	.bNumEndpoints		= 2,
++	.bNumEndpoints		= 1,
+ 	.bInterfaceClass	= USB_CLASS_HID,
+ 	/* .bInterfaceSubClass	= DYNAMIC */
+ 	/* .bInterfaceProtocol	= DYNAMIC */
+@@ -112,23 +112,10 @@ static struct usb_endpoint_descriptor hidg_hs_in_ep_desc = {
+ 				      */
+ };
+ 
+-static struct usb_endpoint_descriptor hidg_hs_out_ep_desc = {
+-	.bLength		= USB_DT_ENDPOINT_SIZE,
+-	.bDescriptorType	= USB_DT_ENDPOINT,
+-	.bEndpointAddress	= USB_DIR_OUT,
+-	.bmAttributes		= USB_ENDPOINT_XFER_INT,
+-	/*.wMaxPacketSize	= DYNAMIC */
+-	.bInterval		= 4, /* FIXME: Add this field in the
+-				      * HID gadget configuration?
+-				      * (struct hidg_func_descriptor)
+-				      */
+-};
+-
+ static struct usb_descriptor_header *hidg_hs_descriptors[] = {
+ 	(struct usb_descriptor_header *)&hidg_interface_desc,
+ 	(struct usb_descriptor_header *)&hidg_desc,
+ 	(struct usb_descriptor_header *)&hidg_hs_in_ep_desc,
+-	(struct usb_descriptor_header *)&hidg_hs_out_ep_desc,
+ 	NULL,
+ };
+ 
+@@ -146,23 +133,10 @@ static struct usb_endpoint_descriptor hidg_fs_in_ep_desc = {
+ 				       */
+ };
+ 
+-static struct usb_endpoint_descriptor hidg_fs_out_ep_desc = {
+-	.bLength		= USB_DT_ENDPOINT_SIZE,
+-	.bDescriptorType	= USB_DT_ENDPOINT,
+-	.bEndpointAddress	= USB_DIR_OUT,
+-	.bmAttributes		= USB_ENDPOINT_XFER_INT,
+-	/*.wMaxPacketSize	= DYNAMIC */
+-	.bInterval		= 10, /* FIXME: Add this field in the
+-				       * HID gadget configuration?
+-				       * (struct hidg_func_descriptor)
+-				       */
+-};
+-
+ static struct usb_descriptor_header *hidg_fs_descriptors[] = {
+ 	(struct usb_descriptor_header *)&hidg_interface_desc,
+ 	(struct usb_descriptor_header *)&hidg_desc,
+ 	(struct usb_descriptor_header *)&hidg_fs_in_ep_desc,
+-	(struct usb_descriptor_header *)&hidg_fs_out_ep_desc,
+ 	NULL,
+ };
+ 
+@@ -198,6 +172,9 @@ static ssize_t f_hidg_read(struct file *file, char __user *buffer,
+ 	unsigned long flags;
+ 	int ret;
+ 
++	if (!hidg->out_ep)
++		return -EOPNOTSUPP;
++
+ 	if (!count)
+ 		return 0;
+ 
+@@ -548,15 +525,18 @@ static void hidg_disable(struct usb_function *f)
+ 	unsigned long flags;
+ 
+ 	usb_ep_disable(hidg->in_ep);
+-	usb_ep_disable(hidg->out_ep);
+ 
+-	spin_lock_irqsave(&hidg->read_spinlock, flags);
+-	list_for_each_entry_safe(list, next, &hidg->completed_out_req, list) {
+-		free_ep_req(hidg->out_ep, list->req);
+-		list_del(&list->list);
+-		kfree(list);
++	if (hidg->out_ep) {
++		usb_ep_disable(hidg->out_ep);
++
++		spin_lock_irqsave(&hidg->read_spinlock, flags);
++		list_for_each_entry_safe(list, next, &hidg->completed_out_req, list) {
++			free_ep_req(hidg->out_ep, list->req);
++			list_del(&list->list);
++			kfree(list);
++		}
++		spin_unlock_irqrestore(&hidg->read_spinlock, flags);
+ 	}
+-	spin_unlock_irqrestore(&hidg->read_spinlock, flags);
+ 
+ 	spin_lock_irqsave(&hidg->write_spinlock, flags);
+ 	if (!hidg->write_pending) {
+@@ -706,18 +686,13 @@ static int hidg_bind(struct usb_configuration *c, struct usb_function *f)
+ 		goto fail;
+ 	hidg->in_ep = ep;
+ 
+-	ep = usb_ep_autoconfig(c->cdev->gadget, &hidg_fs_out_ep_desc);
+-	if (!ep)
+-		goto fail;
+-	hidg->out_ep = ep;
++	hidg->out_ep = NULL;
+ 
+ 	/* set descriptor dynamic values */
+ 	hidg_interface_desc.bInterfaceSubClass = hidg->bInterfaceSubClass;
+ 	hidg_interface_desc.bInterfaceProtocol = hidg->bInterfaceProtocol;
+ 	hidg_hs_in_ep_desc.wMaxPacketSize = cpu_to_le16(hidg->report_length);
+ 	hidg_fs_in_ep_desc.wMaxPacketSize = cpu_to_le16(hidg->report_length);
+-	hidg_hs_out_ep_desc.wMaxPacketSize = cpu_to_le16(hidg->report_length);
+-	hidg_fs_out_ep_desc.wMaxPacketSize = cpu_to_le16(hidg->report_length);
+ 	/*
+ 	 * We can use hidg_desc struct here but we should not relay
+ 	 * that its content won't change after returning from this function.
+@@ -728,8 +703,6 @@ static int hidg_bind(struct usb_configuration *c, struct usb_function *f)
+ 
+ 	hidg_hs_in_ep_desc.bEndpointAddress =
+ 		hidg_fs_in_ep_desc.bEndpointAddress;
+-	hidg_hs_out_ep_desc.bEndpointAddress =
+-		hidg_fs_out_ep_desc.bEndpointAddress;
+ 
+ 	status = usb_assign_descriptors(f, hidg_fs_descriptors,
+ 			hidg_hs_descriptors, NULL, NULL);

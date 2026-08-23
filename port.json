@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "name": "usbjiggler",
+  "title": "USB Mouse Jiggler",
+  "desc": "Turn an RG34XXSP running muOS 2 NeXT into a configurable USB HID mouse. Choose 1-300 second intervals, smooth 1-2000 pixel movement, and Horizontal, Vertical, Square, or Random patterns from the gamepad. The bundled provenance-gated module and reversible ConfigFS lifecycle require no kernel flashing.",
+  "inst": "Extract the archive to the SD-card storage root, then launch USB Mouse Jiggler from Ports. Connect the RG34XXSP USB-C port to the host computer before starting movement.",
+  "genres": ["tool"],
+  "porter": ["RG34XXSP Community"],
+  "image": "screenshot.png",
+  "rtr": true,
+  "runtime": null,
+  "reqs": []
+}

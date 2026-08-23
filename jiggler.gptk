@@ -1,0 +1,11 @@
+up = up
+down = down
+left = left
+right = right
+
+a = enter
+b = esc
+start = space
+select = esc
+
+hotkey = select

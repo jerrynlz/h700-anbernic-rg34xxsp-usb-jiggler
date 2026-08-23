@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gameList>
+  <game>
+    <path>./usbjiggler.sh</path>
+    <name>USB Mouse Jiggler</name>
+    <desc>Safe module-backed USB HID mouse jiggler for RG34XXSP on muOS 2 NeXT. Configure 1-300 second intervals, smooth 1-2000 pixel movement, and four patterns using only the gamepad. A starts or stops, the D-pad opens settings, Start opens help, and B exits through reversible USB cleanup. No kernel flashing is required.</desc>
+    <image>./screenshot.png</image>
+    <genre>Tool</genre>
+  </game>
+</gameList>
